@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Laporan Lembur Bulanan</title>
 <style>
-/* === GAYA TETAP SAMA === */
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);padding:20px;min-height:100vh}
 .container{max-width:1400px;margin:0 auto;background:#fff;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,0.2);overflow:hidden}
@@ -19,14 +18,38 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 .input-group input,.input-group select,.input-group textarea{padding:8px 12px;border:2px solid #dee2e6;border-radius:6px;font-size:14px;transition:border-color .3s;font-family:inherit}
 .input-group textarea{resize:vertical;min-height:60px}
 .input-group input:focus,.input-group select:focus,.input-group textarea:focus{outline:none;border-color:#667eea}
-.file-input-wrapper{position:relative;display:inline-block;width:100%}
-.file-input-wrapper input[type=file]{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer}
-.file-input-label{display:flex;align-items:center;gap:10px;padding:8px 12px;border:2px dashed #dee2e6;border-radius:6px;background:white;cursor:pointer;transition:.3s}
-.file-input-label:hover{border-color:#667eea;background:#f8f9fa}
+
+/* === DROP ZONE BARU === */
+.file-input-wrapper{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  padding:25px;
+  border:3px dashed #adb5bd;
+  border-radius:8px;
+  background:#fff;
+  cursor:pointer;
+  transition:.3s;
+}
+.file-input-wrapper:hover,
+.file-input-wrapper.dragover,
+.file-input-wrapper:focus{
+  border-color:#667eea;
+  background:#f0f3ff;
+}
+.file-input-wrapper:focus{outline:none;box-shadow:0 0 0 2px rgba(102,126,234,0.3);}
+.file-input-wrapper input[type=file]{position:absolute;opacity:0;inset:0;cursor:pointer}
+.file-input-label{text-align:center;color:#495057;font-size:14px}
+.file-input-label span:first-child{font-size:24px;display:block;margin-bottom:6px}
+
 .file-preview{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}
 .preview-item{position:relative;width:100px;height:100px;border:2px solid #dee2e6;border-radius:6px;overflow:hidden}
 .preview-item img{width:100%;height:100%;object-fit:cover}
 .preview-remove{position:absolute;top:5px;right:5px;background:#dc3545;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+
 .button-group{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 button{padding:10px 20px;border:none;border-radius:6px;font-weight:600;cursor:pointer;transition:.3s;font-size:14px}
 .btn-add{background:#667eea;color:white}.btn-add:hover{background:#5568d3;transform:translateY(-2px)}
@@ -34,15 +57,18 @@ button{padding:10px 20px;border:none;border-radius:6px;font-weight:600;cursor:po
 .btn-clear{background:#6c757d;color:white}.btn-clear:hover{background:#5a6268}
 .btn-delete{background:#dc3545;color:white;padding:5px 10px;font-size:12px}.btn-delete:hover{background:#c82333}
 .btn-view{background:#17a2b8;color:white;padding:5px 10px;font-size:12px}.btn-view:hover{background:#138496}
+
 .table-container{padding:30px;overflow-x:auto}
 table{width:100%;border-collapse:collapse}
 th{background:#667eea;color:white;padding:12px;text-align:left;font-weight:600;font-size:13px;white-space:nowrap}
 td{padding:12px;border-bottom:1px solid #e9ecef;font-size:14px}
 tr:hover{background:#f8f9fa}
+
 .summary{padding:20px 30px;background:#f8f9fa;border-top:2px solid #e9ecef;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
 .summary-item{background:white;padding:15px;border-radius:8px;border-left:4px solid #667eea}
 .summary-item label{font-size:12px;color:#6c757d;font-weight:600;display:block;margin-bottom:5px}
 .summary-item .value{font-size:24px;font-weight:bold;color:#667eea}
+
 .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.8);align-items:center;justify-content:center}
 .modal.active{display:flex}
 .modal-content{background:white;padding:20px;border-radius:10px;max-width:90%;max-height:90%;overflow:auto;position:relative}
@@ -54,143 +80,146 @@ tr:hover{background:#f8f9fa}
 </head>
 <body>
 <div class="container">
-<div class="header"><h1>📊 Laporan Lembur Bulanan</h1><p>Catat lembur Anda dan kumpulkan bukti</p></div>
+  <div class="header">
+    <h1>📊 Laporan Lembur Bulanan</h1>
+    <p>Catat lembur Anda dan kumpulkan bukti</p>
+  </div>
 
-<div class="controls">
-  <div class="form-grid">
-    <!-- Kolom Bulan & Tahun dihapus -->
-    <div class="input-group"><label>Tanggal Lembur *</label><input type="date" id="tanggal"></div>
-    <div class="input-group"><label>Jam Mulai *</label><input type="time" id="jamMulai"></div>
-    <div class="input-group"><label>Jam Selesai *</label><input type="time" id="jamSelesai"></div>
-    <div class="input-group full-width"><label>Deskripsi Pekerjaan *</label><textarea id="deskripsi"></textarea></div>
-    <div class="input-group full-width">
-      <label>Upload Bukti Screenshot</label>
-      <div class="file-input-wrapper"><input type="file" id="buktiFile" multiple accept="image/*">
-        <div class="file-input-label"><span>📷</span><span id="fileName">Pilih gambar bukti lembur...</span></div></div>
-      <div class="file-preview" id="filePreview"></div>
+  <div class="controls">
+    <div class="form-grid">
+      <div class="input-group"><label>Tanggal Lembur *</label><input type="date" id="tanggal"></div>
+      <div class="input-group"><label>Jam Mulai *</label><input type="time" id="jamMulai"></div>
+      <div class="input-group"><label>Jam Selesai *</label><input type="time" id="jamSelesai"></div>
+      <div class="input-group full-width"><label>Deskripsi Pekerjaan *</label><textarea id="deskripsi"></textarea></div>
+
+      <div class="input-group full-width">
+        <label>Upload Bukti Screenshot (klik, drag, atau Ctrl+V)</label>
+        <div class="file-input-wrapper" id="pasteArea" tabindex="0">
+          <input type="file" id="buktiFile" multiple accept="image/*">
+          <div class="file-input-label">
+            <span>📷</span>
+            <span id="fileName">Pilih, tempel, atau seret gambar bukti lembur ke sini...</span>
+          </div>
+        </div>
+        <div class="file-preview" id="filePreview"></div>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button class="btn-add" onclick="tambahData()">+ Tambah Data</button>
+      <button class="btn-export" onclick="exportToExcel()">📥 Export Excel</button>
+      <button class="btn-clear" onclick="hapusSemuaData()">🗑️ Hapus Semua</button>
     </div>
   </div>
-  <div class="button-group">
-    <button class="btn-add" onclick="tambahData()">+ Tambah Data</button>
-    <button class="btn-export" onclick="exportToExcel()">📥 Export Excel</button>
-    <button class="btn-clear" onclick="hapusSemuaData()">🗑️ Hapus Semua</button>
+
+  <div class="table-container">
+    <table id="tabelLembur">
+      <thead>
+        <tr><th>No</th><th>Tanggal</th><th>Jam Mulai</th><th>Jam Selesai</th><th>Total Waktu Lembur</th><th>Pekerjaan</th><th>Bukti</th><th>Aksi</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
-</div>
 
-<div class="table-container">
-<table id="tabelLembur"><thead>
-<tr><th>No</th><th>Tanggal</th><th>Jam Mulai</th><th>Jam Selesai</th><th>Total Waktu Lembur</th><th>Pekerjaan</th><th>Bukti</th><th>Aksi</th></tr>
-</thead><tbody id="tbody"></tbody></table></div>
-
-<div class="summary">
-<div class="summary-item"><label>Total Waktu Lembur</label><div class="value" id="totalJam">0</div></div>
-<div class="summary-item"><label>Jumlah Entri</label><div class="value" id="jumlahEntri">0</div></div>
-</div>
+  <div class="summary">
+    <div class="summary-item"><label>Total Waktu Lembur</label><div class="value" id="totalJam">0</div></div>
+    <div class="summary-item"><label>Jumlah Entri</label><div class="value" id="jumlahEntri">0</div></div>
+  </div>
 </div>
 
 <div class="modal" id="modalBukti">
-<div class="modal-content">
-<button class="modal-close" onclick="closeModal()">×</button>
-<h3>Bukti Screenshot</h3>
-<div id="modalInfo"></div>
-<div class="modal-images" id="modalImages"></div>
-</div></div>
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <h3>Bukti Screenshot</h3>
+    <div id="modalInfo"></div>
+    <div class="modal-images" id="modalImages"></div>
+  </div>
+</div>
 <div class="save-indicator" id="saveIndicator">✓ Data tersimpan otomatis</div>
 
 <script>
 let dataLembur = JSON.parse(localStorage.getItem('dataLembur') || '[]');
 let currentImages = [];
 
-function showSaveIndicator(){const s=document.getElementById('saveIndicator');s.style.display='block';setTimeout(()=>s.style.display='none',1500);}
-function saveData(){localStorage.setItem('dataLembur',JSON.stringify(dataLembur));showSaveIndicator();}
-
-function hitungWaktu(mulai,selesai){
-  const [mh,mm]=mulai.split(':').map(Number);
-  const [sh,sm]=selesai.split(':').map(Number);
-  let totalMenit=(sh*60+sm)-(mh*60+mm);
-  if(totalMenit<0) totalMenit+=1440;
-  const jam=Math.floor(totalMenit/60);
-  const menit=totalMenit%60;
-  let hasil='';
-  if(jam>0) hasil+=jam+' jam';
-  if(menit>0) hasil+=(hasil?' ':'')+menit+' menit';
-  if(!hasil) hasil='0 menit';
-  return {text:hasil, menit:totalMenit};
-}
-
-function renderTabel(){
-const tbody=document.getElementById('tbody');
-if(!dataLembur.length){
-  tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#6c757d;">Belum ada data lembur</td></tr>';
-  document.getElementById('totalJam').textContent='0';
-  document.getElementById('jumlahEntri').textContent='0';
-  return;
-}
-tbody.innerHTML=dataLembur.map((d,i)=>`
-<tr>
-<td>${i+1}</td>
-<td>${new Date(d.tanggal).toLocaleDateString('id-ID')}</td>
-<td>${d.jamMulai}</td><td>${d.jamSelesai}</td>
-<td>${d.totalWaktu}</td>
-<td>${d.deskripsi}</td>
-<td>${d.bukti?.length?d.bukti.length+' foto':'-'}</td>
-<td>${d.bukti?.length?'<button class="btn-view" onclick="lihatBukti('+i+')">Lihat</button>':''}<button class="btn-delete" onclick="hapusData(${i})">Hapus</button></td>
-</tr>`).join('');
-const totalMenit=dataLembur.reduce((a,b)=>a+(b.menit||0),0);
-const jam=Math.floor(totalMenit/60),menit=totalMenit%60;
-let totalText='';
-if(jam>0) totalText+=jam+' jam';
-if(menit>0) totalText+=(totalText?' ':'')+menit+' menit';
-if(!totalText) totalText='0 menit';
-document.getElementById('totalJam').textContent=totalText;
-document.getElementById('jumlahEntri').textContent=dataLembur.length;
-}
-renderTabel();
-
-document.getElementById('buktiFile').addEventListener('change',e=>{
-const files=[...e.target.files];const prev=document.getElementById('filePreview');prev.innerHTML='';currentImages=[];
-files.forEach((f,i)=>{const r=new FileReader();r.onload=x=>{
-currentImages.push(x.target.result);
-const div=document.createElement('div');div.className='preview-item';
-div.innerHTML=`<img src="${x.target.result}"><button class="preview-remove" onclick="removeImage(${i})">×</button>`;
-prev.appendChild(div);};r.readAsDataURL(f);});
-document.getElementById('fileName').textContent=files.length?files.length+' gambar dipilih':'Pilih gambar...';
+// === DROP ZONE EVENT ===
+const pasteArea = document.getElementById('pasteArea');
+pasteArea.addEventListener('dragover', e => {
+  e.preventDefault();
+  pasteArea.classList.add('dragover');
 });
-function removeImage(i){currentImages.splice(i,1);document.getElementById('filePreview').children[i].remove();}
+pasteArea.addEventListener('dragleave', () => pasteArea.classList.remove('dragover'));
+pasteArea.addEventListener('drop', e => {
+  e.preventDefault();
+  pasteArea.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
 
-function tambahData(){
-const tanggal=document.getElementById('tanggal').value,jamMulai=document.getElementById('jamMulai').value,jamSelesai=document.getElementById('jamSelesai').value,deskripsi=document.getElementById('deskripsi').value;
-if(!tanggal||!jamMulai||!jamSelesai||!deskripsi){alert('Lengkapi semua kolom!');return;}
-const waktu=hitungWaktu(jamMulai,jamSelesai);
-dataLembur.push({tanggal,jamMulai,jamSelesai,totalWaktu:waktu.text,menit:waktu.menit,deskripsi,bukti:[...currentImages]});
-saveData();renderTabel();
-document.querySelectorAll('#jamMulai,#jamSelesai,#deskripsi,#buktiFile').forEach(e=>e.value='');
-document.getElementById('filePreview').innerHTML='';document.getElementById('fileName').textContent='Pilih gambar bukti lembur...';currentImages=[];
-}
-function hapusData(i){if(confirm('Hapus entri ini?')){dataLembur.splice(i,1);saveData();renderTabel();}}
-function hapusSemuaData(){
-  if(confirm('Hapus semua data?')){
-    dataLembur=[];
-    saveData();
-    renderTabel();
-    document.getElementById('totalJam').textContent='0';
-    document.getElementById('jumlahEntri').textContent='0';
+// handle manual file input
+document.getElementById('buktiFile').addEventListener('change', e => handleFiles(e.target.files));
+
+// === PASTE SUPPORT (global & di area dropzone) ===
+window.addEventListener('paste', e => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.indexOf('image') !== -1) {
+      const file = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = x => addImage(x.target.result);
+      reader.readAsDataURL(file);
+    }
+  }
+});
+
+function handleFiles(files) {
+  for (const file of files) {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = e => addImage(e.target.result);
+      reader.readAsDataURL(file);
+    }
   }
 }
-function lihatBukti(i){const d=dataLembur[i];const m=document.getElementById('modalBukti');document.getElementById('modalInfo').innerHTML=`
-<p><strong>Tanggal:</strong> ${new Date(d.tanggal).toLocaleDateString('id-ID')}</p>
-<p><strong>Waktu:</strong> ${d.jamMulai} - ${d.jamSelesai}</p><p><strong>Pekerjaan:</strong> ${d.deskripsi}</p>`;
-document.getElementById('modalImages').innerHTML=d.bukti.map(x=>`<img src="${x}">`).join('');m.classList.add('active');}
-function closeModal(){document.getElementById('modalBukti').classList.remove('active');}
 
-function exportToExcel(){
-if(!dataLembur.length){alert('Tidak ada data!');return;}
-let html=`<table border="1"><tr><th>No</th><th>Tanggal</th><th>Jam Mulai</th><th>Jam Selesai</th><th>Total Waktu Lembur</th><th>Pekerjaan</th><th>Jumlah Foto</th></tr>`;
-dataLembur.forEach((d,i)=>{
-html+=`<tr><td>${i+1}</td><td>${new Date(d.tanggal).toLocaleDateString('id-ID')}</td><td>${d.jamMulai}</td><td>${d.jamSelesai}</td><td>${d.totalWaktu}</td><td>${d.deskripsi}</td><td>${d.bukti?.length||0}</td></tr>`;});
-html+='</table>';
-const blob=new Blob([html],{type:'application/vnd.ms-excel'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Laporan_Lembur.xls';a.click();
+function addImage(src) {
+  currentImages.push(src);
+  renderPreview();
 }
+
+function removeImage(i) {
+  currentImages.splice(i, 1);
+  renderPreview();
+}
+
+function renderPreview() {
+  const prev = document.getElementById('filePreview');
+  prev.innerHTML = '';
+  currentImages.forEach((src, i) => {
+    const div = document.createElement('div');
+    div.className = 'preview-item';
+    div.innerHTML = `<img src="${src}"><button class="preview-remove" onclick="removeImage(${i})">×</button>`;
+    prev.appendChild(div);
+  });
+  document.getElementById('fileName').textContent =
+    currentImages.length
+      ? currentImages.length + ' gambar ditambahkan'
+      : 'Pilih, tempel, atau seret gambar bukti lembur ke sini...';
+}
+
+/* === SISANYA SAMA === */
+function showSaveIndicator(){const s=document.getElementById('saveIndicator');s.style.display='block';setTimeout(()=>s.style.display='none',1500);}
+function saveData(){localStorage.setItem('dataLembur',JSON.stringify(dataLembur));showSaveIndicator();}
+function hitungWaktu(mulai,selesai){const [mh,mm]=mulai.split(':').map(Number);const [sh,sm]=selesai.split(':').map(Number);let totalMenit=(sh*60+sm)-(mh*60+mm);if(totalMenit<0)totalMenit+=1440;const jam=Math.floor(totalMenit/60);const menit=totalMenit%60;let hasil='';if(jam>0)hasil+=jam+' jam';if(menit>0)hasil+=(hasil?' ':'')+menit+' menit';if(!hasil)hasil='0 menit';return{text:hasil,menit:totalMenit};}
+function renderTabel(){const tbody=document.getElementById('tbody');if(!dataLembur.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#6c757d;">Belum ada data lembur</td></tr>';document.getElementById('totalJam').textContent='0';document.getElementById('jumlahEntri').textContent='0';return;}
+tbody.innerHTML=dataLembur.map((d,i)=>`<tr><td>${i+1}</td><td>${new Date(d.tanggal).toLocaleDateString('id-ID')}</td><td>${d.jamMulai}</td><td>${d.jamSelesai}</td><td>${d.totalWaktu}</td><td>${d.deskripsi}</td><td>${d.bukti?.length?d.bukti.length+' foto':'-'}</td><td>${d.bukti?.length?'<button class="btn-view" onclick="lihatBukti('+i+')">Lihat</button>':''}<button class="btn-delete" onclick="hapusData(${i})">Hapus</button></td></tr>`).join('');
+const totalMenit=dataLembur.reduce((a,b)=>a+(b.menit||0),0);const jam=Math.floor(totalMenit/60),menit=totalMenit%60;let totalText='';if(jam>0)totalText+=jam+' jam';if(menit>0)totalText+=(totalText?' ':'')+menit+' menit';if(!totalText)totalText='0 menit';document.getElementById('totalJam').textContent=totalText;document.getElementById('jumlahEntri').textContent=dataLembur.length;}
+renderTabel();
+function tambahData(){const tanggal=document.getElementById('tanggal').value,jamMulai=document.getElementById('jamMulai').value,jamSelesai=document.getElementById('jamSelesai').value,deskripsi=document.getElementById('deskripsi').value;if(!tanggal||!jamMulai||!jamSelesai||!deskripsi){alert('Lengkapi semua kolom!');return;}const waktu=hitungWaktu(jamMulai,jamSelesai);dataLembur.push({tanggal,jamMulai,jamSelesai,totalWaktu:waktu.text,menit:waktu.menit,deskripsi,bukti:[...currentImages]});saveData();renderTabel();document.querySelectorAll('#jamMulai,#jamSelesai,#deskripsi,#buktiFile').forEach(e=>e.value='');document.getElementById('filePreview').innerHTML='';document.getElementById('fileName').textContent='Pilih, tempel, atau seret gambar bukti lembur ke sini...';currentImages=[];}
+function hapusData(i){if(confirm('Hapus entri ini?')){dataLembur.splice(i,1);saveData();renderTabel();}}
+function hapusSemuaData(){if(confirm('Hapus semua data?')){dataLembur=[];saveData();renderTabel();document.getElementById('totalJam').textContent='0';document.getElementById('jumlahEntri').textContent='0';}}
+function lihatBukti(i){const d=dataLembur[i];const m=document.getElementById('modalBukti');document.getElementById('modalInfo').innerHTML=`<p><strong>Tanggal:</strong> ${new Date(d.tanggal).toLocaleDateString('id-ID')}</p><p><strong>Waktu:</strong> ${d.jamMulai} - ${d.jamSelesai}</p><p><strong>Pekerjaan:</strong> ${d.deskripsi}</p>`;document.getElementById('modalImages').innerHTML=d.bukti.map(x=>`<img src="${x}">`).join('');m.classList.add('active');}
+function closeModal(){document.getElementById('modalBukti').classList.remove('active');}
+function exportToExcel(){if(!dataLembur.length){alert('Tidak ada data!');return;}let html=`<table border="1"><tr><th>No</th><th>Tanggal</th><th>Jam Mulai</th><th>Jam Selesai</th><th>Total Waktu Lembur</th><th>Pekerjaan</th><th>Jumlah Foto</th></tr>`;dataLembur.forEach((d,i)=>{html+=`<tr><td>${i+1}</td><td>${new Date(d.tanggal).toLocaleDateString('id-ID')}</td><td>${d.jamMulai}</td><td>${d.jamSelesai}</td><td>${d.totalWaktu}</td><td>${d.deskripsi}</td><td>${d.bukti?.length||0}</td></tr>`;});html+='</table>';const blob=new Blob([html],{type:'application/vnd.ms-excel'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Laporan_Lembur.xls';a.click();}
 </script>
 </body>
 </html>
