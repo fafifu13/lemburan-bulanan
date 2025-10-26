@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Lembur Bulanan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .input-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .input-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .input-group input, .input-group select, .input-group textarea {
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        .input-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border: 2px dashed #dee2e6;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+        
+        .file-preview {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .preview-item {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .preview-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .btn-add {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-add:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        
+        .btn-view {
+            background: #17a2b8;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        
+        .btn-view:hover {
+            background: #138496;
+        }
+        
+        .btn-export {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-export:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+        
+        .table-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .summary {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .summary-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .summary-item label {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .summary-item .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .modal-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 40px;
+        }
+        
+        .modal-images img {
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+        
+        .description-cell {
+            max-width: 250px;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #28a745;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Laporan Lembur Bulanan</h1>
+            <p>Catat lembur Anda dan kumpulkan bukti untuk dilaporkan ke atasan</p>
+        </div>
+        
+        <div class="controls">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>Bulan & Tahun *</label>
+                    <input type="month" id="bulanTahun">
+                </div>
+                <div class="input-group">
+                    <label>Tanggal Lembur *</label>
+                    <input type="date" id="tanggal">
+                </div>
+                <div class="input-group">
+                    <label>Jam Mulai *</label>
+                    <input type="time" id="jamMulai">
+                </div>
+                <div class="input-group">
+                    <label>Jam Selesai *</label>
+                    <input type="time" id="jamSelesai">
+                </div>
+
+                <div class="input-group full-width">
+                    <label>Deskripsi Pekerjaan *</label>
+                    <textarea id="deskripsi" placeholder="Contoh: Menyelesaikan laporan keuangan Q4, fixing bug di sistem HR, meeting dengan client, dll"></textarea>
+                </div>
+                <div class="input-group full-width">
+                    <label>Upload Bukti Screenshot (bisa lebih dari 1)</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="buktiFile" accept="image/*" multiple>
+                        <div class="file-input-label">
+                            <span>📷</span>
+                            <span id="fileName">Pilih gambar bukti lembur...</span>
+                        </div>
+                    </div>
+                    <div class="file-preview" id="filePreview"></div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn-add" onclick="tambahData()">+ Tambah Data Lembur</button>
+                <button class="btn-export" onclick="exportToExcel()">📥 Export ke Excel</button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="tabelLembur">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Bulan</th>
+                        <th>Tanggal</th>
+                        <th>Jam Mulai</th>
+                        <th>Jam Selesai</th>
+                        <th>Total Jam</th>
+                        <th>Pekerjaan</th>
+                        <th>Bukti</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody">
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <line x1="9" y1="3" x2="9" y2="21"/>
+                                <line x1="15" y1="3" x2="15" y2="21"/>
+                                <line x1="3" y1="9" x2="21" y2="9"/>
+                                <line x1="3" y1="15" x2="21" y2="15"/>
+                            </svg>
+                            <p>Belum ada data lembur. Silakan tambahkan data baru.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="summary">
+            <div class="summary-item">
+                <label>Total Jam Lembur</label>
+                <div class="value" id="totalJam">0</div>
+            </div>
+            <div class="summary-item">
+                <label>Total Pembayaran</label>
+                <div class="value" id="totalBayar">Rp 0</div>
+            </div>
+            <div class="summary-item">
+                <label>Jumlah Entri</label>
+                <div class="value" id="jumlahEntri">0</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal untuk melihat bukti -->
+    <div class="modal" id="modalBukti">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h3 style="margin-bottom: 15px;">Bukti Screenshot Lembur</h3>
+            <div id="modalInfo"></div>
+            <div class="modal-images" id="modalImages"></div>
+        </div>
+    </div>
+    
+    <script>
+        let dataLembur = [];
+        let currentImages = [];
+        let currentBulan = '';
+        
+        // Set bulan dan tanggal hari ini sebagai default
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        document.getElementById('bulanTahun').value = `${year}-${month}`;
+        document.getElementById('tanggal').valueAsDate = today;
+        
+        // Handle file input
+        document.getElementById('buktiFile').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            currentImages = [];
+            
+            const preview = document.getElementById('filePreview');
+            preview.innerHTML = '';
+            
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImages.push(e.target.result);
+                    
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'preview-item';
+                    previewItem.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <button class="preview-remove" onclick="removeImage(${index})">×</button>
+                    `;
+                    preview.appendChild(previewItem);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            document.getElementById('fileName').textContent = 
+                files.length > 1 ? `${files.length} gambar dipilih` : files[0].name;
+        });
+        
+        function removeImage(index) {
+            currentImages.splice(index, 1);
+            document.getElementById('filePreview').children[index].remove();
+            
+            if (currentImages.length === 0) {
+                document.getElementById('fileName').textContent = 'Pilih gambar bukti lembur...';
+            }
+        }
+        
+        function hitungJam(mulai, selesai) {
+            const [jamMulai, menitMulai] = mulai.split(':').map(Number);
+            const [jamSelesai, menitSelesai] = selesai.split(':').map(Number);
+            
+            let totalMenit = (jamSelesai * 60 + menitSelesai) - (jamMulai * 60 + menitMulai);
+            
+            if (totalMenit < 0) {
+                totalMenit += 24 * 60;
+            }
+            
+            return (totalMenit / 60).toFixed(2);
+        }
+        
+        function tambahData() {
+            const bulanTahun = document.getElementById('bulanTahun').value;
+            const tanggal = document.getElementById('tanggal').value;
+            const jamMulai = document.getElementById('jamMulai').value;
+            const jamSelesai = document.getElementById('jamSelesai').value;
+            const deskripsi = document.getElementById('deskripsi').value;
+            
+            if (!bulanTahun || !tanggal || !jamMulai || !jamSelesai || !deskripsi) {
+                alert('Mohon lengkapi semua data yang wajib diisi (*)!');
+                return;
+            }
+            
+            const totalJam = parseFloat(hitungJam(jamMulai, jamSelesai));
+            
+            const data = {
+                bulanTahun,
+                tanggal,
+                jamMulai,
+                jamSelesai,
+                totalJam,
+                deskripsi,
+                bukti: [...currentImages]
+            };
+            
+            dataLembur.push(data);
+            renderTabel();
+            updateRingkasan();
+            
+            // Reset form
+            document.getElementById('jamMulai').value = '';
+            document.getElementById('jamSelesai').value = '';
+            document.getElementById('deskripsi').value = '';
+            document.getElementById('buktiFile').value = '';
+            document.getElementById('fileName').textContent = 'Pilih gambar bukti lembur...';
+            document.getElementById('filePreview').innerHTML = '';
+            currentImages = [];
+        }
+        
+        function hapusData(index) {
+            if (confirm('Yakin ingin menghapus data ini?')) {
+                dataLembur.splice(index, 1);
+                renderTabel();
+                updateRingkasan();
+            }
+        }
+        
+        function lihatBukti(index) {
+            const data = dataLembur[index];
+            const modal = document.getElementById('modalBukti');
+            const modalImages = document.getElementById('modalImages');
+            const modalInfo = document.getElementById('modalInfo');
+            
+            modalInfo.innerHTML = `
+                <p><strong>Bulan:</strong> ${new Date(data.bulanTahun + '-01').toLocaleDateString('id-ID', {month: 'long', year: 'numeric'})}</p>
+                <p><strong>Tanggal:</strong> ${new Date(data.tanggal).toLocaleDateString('id-ID')}</p>
+                <p><strong>Waktu:</strong> ${data.jamMulai} - ${data.jamSelesai}</p>
+                <p><strong>Pekerjaan:</strong> ${data.deskripsi}</p>
+            `;
+            
+            if (data.bukti && data.bukti.length > 0) {
+                modalImages.innerHTML = data.bukti.map(img => 
+                    `<img src="${img}" alt="Bukti lembur">`
+                ).join('');
+            } else {
+                modalImages.innerHTML = '<p style="text-align: center; color: #6c757d;">Tidak ada bukti screenshot</p>';
+            }
+            
+            modal.classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('modalBukti').classList.remove('active');
+        }
+        
+        function renderTabel() {
+            const tbody = document.getElementById('tbody');
+            
+            if (dataLembur.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <line x1="9" y1="3" x2="9" y2="21"/>
+                                <line x1="15" y1="3" x2="15" y2="21"/>
+                                <line x1="3" y1="9" x2="21" y2="9"/>
+                                <line x1="3" y1="15" x2="21" y2="15"/>
+                            </svg>
+                            <p>Belum ada data lembur. Silakan tambahkan data baru.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = dataLembur.map((data, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${new Date(data.bulanTahun + '-01').toLocaleDateString('id-ID', {month: 'long', year: 'numeric'})}</td>
+                    <td>${new Date(data.tanggal).toLocaleDateString('id-ID')}</td>
+                    <td>${data.jamMulai}</td>
+                    <td>${data.jamSelesai}</td>
+                    <td>${data.totalJam} jam</td>
+                    <td class="description-cell">${data.deskripsi}</td>
+                    <td>
+                        ${data.bukti && data.bukti.length > 0 ? 
+                            `<span class="badge">${data.bukti.length} foto</span>` : 
+                            '<span style="color: #6c757d; font-size: 12px;">Tidak ada</span>'}
+                    </td>
+                    <td>
+                        ${data.bukti && data.bukti.length > 0 ? 
+                            `<button class="btn-view" onclick="lihatBukti(${index})">Lihat</button>` : ''}
+                        <button class="btn-delete" onclick="hapusData(${index})">Hapus</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateRingkasan() {
+            const totalJam = dataLembur.reduce((sum, data) => sum + data.totalJam, 0);
+            
+            document.getElementById('totalJam').textContent = totalJam.toFixed(2);
+            document.getElementById('totalBayar').textContent = '-';
+            document.getElementById('jumlahEntri').textContent = dataLembur.length;
+        }
+        
+        function exportToExcel() {
+            if (dataLembur.length === 0) {
+                alert('Tidak ada data untuk di-export!');
+                return;
+            }
+            
+            // Buat HTML table untuk Excel
+            let html = `
+                <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        table { border-collapse: collapse; width: 100%; }
+                        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+                        th { background-color: #667eea; color: white; font-weight: bold; }
+                        .header { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+                        .summary { margin-top: 20px; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">LAPORAN LEMBUR BULANAN</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Bulan</th>
+                                <th>Tanggal</th>
+                                <th>Jam Mulai</th>
+                                <th>Jam Selesai</th>
+                                <th>Total Jam</th>
+                                <th>Deskripsi Pekerjaan</th>
+                                <th>Jumlah Bukti Foto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            dataLembur.forEach((data, index) => {
+                const bulanText = new Date(data.bulanTahun + '-01').toLocaleDateString('id-ID', {month: 'long', year: 'numeric'});
+                const tanggalText = new Date(data.tanggal).toLocaleDateString('id-ID');
+                const jumlahBukti = data.bukti && data.bukti.length > 0 ? data.bukti.length : 0;
+                
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${bulanText}</td>
+                        <td>${tanggalText}</td>
+                        <td>${data.jamMulai}</td>
+                        <td>${data.jamSelesai}</td>
+                        <td>${data.totalJam}</td>
+                        <td>${data.deskripsi}</td>
+                        <td>${jumlahBukti}</td>
+                    </tr>
+                `;
+            });
+            
+            const totalJam = dataLembur.reduce((sum, data) => sum + data.totalJam, 0);
+            
+            html += `
+                        </tbody>
+                    </table>
+                    <div class="summary">
+                        <p>Total Jam Lembur: ${totalJam.toFixed(2)} jam</p>
+                        <p>Total Entri: ${dataLembur.length} kali</p>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Convert ke blob dan download
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Laporan_Lembur_${new Date().toISOString().split('T')[0]}.xls`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            alert('Laporan berhasil di-export ke Excel! Catatan: Bukti foto tidak bisa disertakan di Excel, tapi jumlahnya tercatat. Anda bisa lampirkan foto terpisah saat menyerahkan ke atasan.');
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('modalBukti').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
