@@ -79,11 +79,11 @@ tr:hover{background:#f8f9fa}
 
 <div class="table-container">
 <table id="tabelLembur"><thead>
-<tr><th>No</th><th>Bulan</th><th>Tanggal</th><th>Jam Mulai</th><th>Jam Selesai</th><th>Total Jam</th><th>Pekerjaan</th><th>Bukti</th><th>Aksi</th></tr>
+<tr><th>No</th><th>Tanggal</th><th>Jam Mulai</th><th>Jam Selesai</th><th>Total Waktu Lembur</th><th>Pekerjaan</th><th>Bukti</th><th>Aksi</th></tr>
 </thead><tbody id="tbody"></tbody></table></div>
 
 <div class="summary">
-<div class="summary-item"><label>Total Jam</label><div class="value" id="totalJam">0</div></div>
+<div class="summary-item"><label>Total Waktu Lembur</label><div class="value" id="totalJam">0</div></div>
 <div class="summary-item"><label>Jumlah Entri</label><div class="value" id="jumlahEntri">0</div></div>
 </div>
 </div>
@@ -103,22 +103,41 @@ let currentImages = [];
 
 function showSaveIndicator(){const s=document.getElementById('saveIndicator');s.style.display='block';setTimeout(()=>s.style.display='none',1500);}
 function saveData(){localStorage.setItem('dataLembur',JSON.stringify(dataLembur));showSaveIndicator();}
-function hitungJam(mulai,selesai){const[mh,mm]=mulai.split(':').map(Number);const[sh,sm]=selesai.split(':').map(Number);let total=(sh*60+sm)-(mh*60+mm);if(total<0)total+=1440;return(total/60).toFixed(2);}
+
+function hitungWaktu(mulai,selesai){
+  const [mh,mm]=mulai.split(':').map(Number);
+  const [sh,sm]=selesai.split(':').map(Number);
+  let totalMenit=(sh*60+sm)-(mh*60+mm);
+  if(totalMenit<0) totalMenit+=1440;
+  const jam=Math.floor(totalMenit/60);
+  const menit=totalMenit%60;
+  let hasil='';
+  if(jam>0) hasil+=jam+' jam';
+  if(menit>0) hasil+=(hasil?' ':'')+menit+' menit';
+  if(!hasil) hasil='0 menit';
+  return {text:hasil, menit:totalMenit};
+}
+
 function renderTabel(){
 const tbody=document.getElementById('tbody');
-if(!dataLembur.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:#6c757d;">Belum ada data lembur</td></tr>';return;}
+if(!dataLembur.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#6c757d;">Belum ada data lembur</td></tr>';return;}
 tbody.innerHTML=dataLembur.map((d,i)=>`
 <tr>
 <td>${i+1}</td>
-<td>${new Date(d.bulanTahun+'-01').toLocaleDateString('id-ID',{month:'long',year:'numeric'})}</td>
 <td>${new Date(d.tanggal).toLocaleDateString('id-ID')}</td>
 <td>${d.jamMulai}</td><td>${d.jamSelesai}</td>
-<td>${d.totalJam} jam</td>
+<td>${d.totalWaktu}</td>
 <td>${d.deskripsi}</td>
 <td>${d.bukti?.length?d.bukti.length+' foto':'-'}</td>
 <td>${d.bukti?.length?'<button class="btn-view" onclick="lihatBukti('+i+')">Lihat</button>':''}<button class="btn-delete" onclick="hapusData(${i})">Hapus</button></td>
 </tr>`).join('');
-document.getElementById('totalJam').textContent=dataLembur.reduce((a,b)=>a+parseFloat(b.totalJam),0).toFixed(2);
+const totalMenit=dataLembur.reduce((a,b)=>a+(b.menit||0),0);
+const jam=Math.floor(totalMenit/60),menit=totalMenit%60;
+let totalText='';
+if(jam>0) totalText+=jam+' jam';
+if(menit>0) totalText+=(totalText?' ':'')+menit+' menit';
+if(!totalText) totalText='0 menit';
+document.getElementById('totalJam').textContent=totalText;
 document.getElementById('jumlahEntri').textContent=dataLembur.length;
 }
 renderTabel();
@@ -137,8 +156,8 @@ function removeImage(i){currentImages.splice(i,1);document.getElementById('fileP
 function tambahData(){
 const bulanTahun=document.getElementById('bulanTahun').value,tanggal=document.getElementById('tanggal').value,jamMulai=document.getElementById('jamMulai').value,jamSelesai=document.getElementById('jamSelesai').value,deskripsi=document.getElementById('deskripsi').value;
 if(!bulanTahun||!tanggal||!jamMulai||!jamSelesai||!deskripsi){alert('Lengkapi semua kolom!');return;}
-const totalJam=hitungJam(jamMulai,jamSelesai);
-dataLembur.push({bulanTahun,tanggal,jamMulai,jamSelesai,totalJam,deskripsi,bukti:[...currentImages]});
+const waktu=hitungWaktu(jamMulai,jamSelesai);
+dataLembur.push({bulanTahun,tanggal,jamMulai,jamSelesai,totalWaktu:waktu.text,menit:waktu.menit,deskripsi,bukti:[...currentImages]});
 saveData();renderTabel();
 document.querySelectorAll('#jamMulai,#jamSelesai,#deskripsi,#buktiFile').forEach(e=>e.value='');
 document.getElementById('filePreview').innerHTML='';document.getElementById('fileName').textContent='Pilih gambar bukti lembur...';currentImages=[];
@@ -153,11 +172,9 @@ function closeModal(){document.getElementById('modalBukti').classList.remove('ac
 
 function exportToExcel(){
 if(!dataLembur.length){alert('Tidak ada data!');return;}
-let html=`<table border="1"><tr><th>No</th><th>Bulan</th><th>Tanggal</th><th>Jam Mulai</th><th>Jam Selesai</th><th>Total Jam</th><th>Pekerjaan</th><th>Jumlah Foto</th></tr>`;
+let html=`<table border="1"><tr><th>No</th><th>Tanggal</th><th>Jam Mulai</th><th>Jam Selesai</th><th>Total Waktu Lembur</th><th>Pekerjaan</th><th>Jumlah Foto</th></tr>`;
 dataLembur.forEach((d,i)=>{
-html+=`<tr><td>${i+1}</td><td>${new Date(d.bulanTahun+'-01').toLocaleDateString('id-ID',{month:'long',year:'numeric'})}</td>
-<td>${new Date(d.tanggal).toLocaleDateString('id-ID')}</td><td>${d.jamMulai}</td><td>${d.jamSelesai}</td>
-<td>${d.totalJam}</td><td>${d.deskripsi}</td><td>${d.bukti?.length||0}</td></tr>`;});
+html+=`<tr><td>${i+1}</td><td>${new Date(d.tanggal).toLocaleDateString('id-ID')}</td><td>${d.jamMulai}</td><td>${d.jamSelesai}</td><td>${d.totalWaktu}</td><td>${d.deskripsi}</td><td>${d.bukti?.length||0}</td></tr>`;});
 html+='</table>';
 const blob=new Blob([html],{type:'application/vnd.ms-excel'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Laporan_Lembur.xls';a.click();
 }
