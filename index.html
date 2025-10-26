@@ -58,7 +58,7 @@ tr:hover{background:#f8f9fa}
 
 <div class="controls">
   <div class="form-grid">
-    <div class="input-group"><label>Bulan & Tahun *</label><input type="month" id="bulanTahun"></div>
+    <!-- Kolom Bulan & Tahun dihapus -->
     <div class="input-group"><label>Tanggal Lembur *</label><input type="date" id="tanggal"></div>
     <div class="input-group"><label>Jam Mulai *</label><input type="time" id="jamMulai"></div>
     <div class="input-group"><label>Jam Selesai *</label><input type="time" id="jamSelesai"></div>
@@ -120,7 +120,12 @@ function hitungWaktu(mulai,selesai){
 
 function renderTabel(){
 const tbody=document.getElementById('tbody');
-if(!dataLembur.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#6c757d;">Belum ada data lembur</td></tr>';return;}
+if(!dataLembur.length){
+  tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#6c757d;">Belum ada data lembur</td></tr>';
+  document.getElementById('totalJam').textContent='0';
+  document.getElementById('jumlahEntri').textContent='0';
+  return;
+}
 tbody.innerHTML=dataLembur.map((d,i)=>`
 <tr>
 <td>${i+1}</td>
@@ -154,16 +159,24 @@ document.getElementById('fileName').textContent=files.length?files.length+' gamb
 function removeImage(i){currentImages.splice(i,1);document.getElementById('filePreview').children[i].remove();}
 
 function tambahData(){
-const bulanTahun=document.getElementById('bulanTahun').value,tanggal=document.getElementById('tanggal').value,jamMulai=document.getElementById('jamMulai').value,jamSelesai=document.getElementById('jamSelesai').value,deskripsi=document.getElementById('deskripsi').value;
-if(!bulanTahun||!tanggal||!jamMulai||!jamSelesai||!deskripsi){alert('Lengkapi semua kolom!');return;}
+const tanggal=document.getElementById('tanggal').value,jamMulai=document.getElementById('jamMulai').value,jamSelesai=document.getElementById('jamSelesai').value,deskripsi=document.getElementById('deskripsi').value;
+if(!tanggal||!jamMulai||!jamSelesai||!deskripsi){alert('Lengkapi semua kolom!');return;}
 const waktu=hitungWaktu(jamMulai,jamSelesai);
-dataLembur.push({bulanTahun,tanggal,jamMulai,jamSelesai,totalWaktu:waktu.text,menit:waktu.menit,deskripsi,bukti:[...currentImages]});
+dataLembur.push({tanggal,jamMulai,jamSelesai,totalWaktu:waktu.text,menit:waktu.menit,deskripsi,bukti:[...currentImages]});
 saveData();renderTabel();
 document.querySelectorAll('#jamMulai,#jamSelesai,#deskripsi,#buktiFile').forEach(e=>e.value='');
 document.getElementById('filePreview').innerHTML='';document.getElementById('fileName').textContent='Pilih gambar bukti lembur...';currentImages=[];
 }
 function hapusData(i){if(confirm('Hapus entri ini?')){dataLembur.splice(i,1);saveData();renderTabel();}}
-function hapusSemuaData(){if(confirm('Hapus semua data?')){dataLembur=[];saveData();renderTabel();}}
+function hapusSemuaData(){
+  if(confirm('Hapus semua data?')){
+    dataLembur=[];
+    saveData();
+    renderTabel();
+    document.getElementById('totalJam').textContent='0';
+    document.getElementById('jumlahEntri').textContent='0';
+  }
+}
 function lihatBukti(i){const d=dataLembur[i];const m=document.getElementById('modalBukti');document.getElementById('modalInfo').innerHTML=`
 <p><strong>Tanggal:</strong> ${new Date(d.tanggal).toLocaleDateString('id-ID')}</p>
 <p><strong>Waktu:</strong> ${d.jamMulai} - ${d.jamSelesai}</p><p><strong>Pekerjaan:</strong> ${d.deskripsi}</p>`;
